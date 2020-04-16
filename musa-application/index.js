@@ -3,18 +3,36 @@ addEventListener('fetch', event =>{
 });
 
 /**
- *  Send fetch request to url for assignment and return response
+ *  Get two urls from first url and send a response from one of the urls 
+ *  Use cookies to store which url to send a response from (cookie is deleted when browser closes -> user will see same url response if they refresh page on same browser session)
  *  Use random number generator to simulate A/B testing by switching between two pages to show based off generated value
  * @param {Request} request 
  */
 async function handleRequest(request){
-  let urlArray = await fetchUrl('https://cfw-takehome.developers.workers.dev/api/variants');
+  const NAME = 'cookie';
+  let urlArray = await fetchUrl('https://cfw-takehome.developers.workers.dev/api/variants'); // Get the two urls
+
   urlArray = urlArray.variants;
-  let responseNumber = Math.round(Math.random()); // response to render will be randomly selected between 0 and 1 in the array
 
-  return new Response(await fetchUrl(urlArray[responseNumber]));
+  let response1 = new Response(await fetchUrl(urlArray[0])); // Get the response from the first url in the array
+  let response2 = new Response(await fetchUrl(urlArray[1])); // Get response from second url
+
+  // Get cookie and check which page to show based off value 
+  const cookie = request.headers.get('cookie'); 
+  if(cookie && cookie.includes(`${NAME}=group1`)){
+    return response1;
+  }
+  else if(cookie && cookie.includes(`${NAME}=group2`)){
+    return response2;
+  }
+  else{ // New user so create a cookie for them 
+    let group = Math.random() < 0.5 ? 'group1': 'group2'; // Simualate A/B testing style
+    let response = group === 'group1' ? response1: response2;
+    response.headers.append('Set-Cookie', `${NAME}=${group}; path=/; domain=musarafik.workers.dev; SameSite=Lax;`);
+    return response;
+
+  }
 }
-
 
 /**
  * Returns response from fetch request of given url (checks if response type is json or html)

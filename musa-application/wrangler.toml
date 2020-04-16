@@ -1,6 +1,8 @@
 name = "musa-application"
 type = "javascript"
-account_id = ""
+account_id = "fab049dc3b5195a4445cca2710d84dfa"
 workers_dev = true
 route = ""
 zone_id = ""
+
+
